@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#141414">
+  <meta name="description" content="Meso+ is a periodization-aware training log for athletes who plan in blocks, not streaks.">
+  <meta property="og:title" content="Meso+ — Make the next set count">
+  <meta property="og:description" content="Log the work. Read the signal. Decide what moves next.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.mesoplus.app">
+  <title>Meso+ — Make the next set count</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23141414'/%3E%3Cpath d='M18 32h28M32 18v28' stroke='%23779632' stroke-width='7'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+
+      /* Space DS primitives, mirrored from FOOO Design System. */
+      --space-neutral-dark-100: #141414;
+      --space-neutral-dark-200: #393939;
+      --space-neutral-dark-300: #666666;
+      --space-neutral-dark-400: #8a8a8a;
+      --space-neutral-dark-500: #bebebe;
+      --space-neutral-dark-600: #fbfbfb;
+      --space-text-dark-500: #bebebe;
+      --space-text-dark-600: #f6f6f6;
+      --space-success-2: #bed18a;
+      --space-success-3: #779632;
+      --space-success-5: #2e450e;
+      --space-size-2xs: 3px;
+      --space-size-1xs: 6px;
+      --space-size-sm: 12px;
+      --space-size-md-mini: 15px;
+      --space-size-md: 18px;
+      --space-size-lg: 24px;
+      --space-size-1xl: 30px;
+      --space-size-2xl: 54px;
+      --space-size-3xl: 84px;
+      --space-size-4xl: 138px;
+      --space-container-lg: 1164px;
+
+      /* Meso+ semantic theme. */
+      --color-ink: var(--space-text-dark-600);
+      --color-ink-2: var(--space-text-dark-500);
+      --color-ink-3: var(--space-neutral-dark-400);
+      --color-line: var(--space-neutral-dark-200);
+      --color-line-strong: var(--space-neutral-dark-300);
+      --color-surface: #1b1b1b;
+      --color-lift: var(--space-neutral-dark-100);
+      --color-accent: var(--space-success-3);
+      --color-accent-bright: var(--space-success-2);
+      --color-accent-deep: var(--space-success-5);
+      --color-inverse: #0f0f0f;
+      --font-mono: "DM Mono", ui-monospace, monospace;
+      --font-serif: "Instrument Serif", Georgia, serif;
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --max: var(--space-container-lg);
+      --ease-out: cubic-bezier(.16, 1, .3, 1);
+      --z-nav: 20;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; background: var(--color-lift); }
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      background: var(--color-lift);
+      color: var(--color-ink);
+      font-family: var(--font-mono);
+      font-size: 16px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    img { display: block; max-width: 100%; }
+    figure { margin: 0; }
+    a { color: inherit; }
+    button, input { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    ::selection { background: var(--color-accent); color: var(--color-inverse); }
+    :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 4px; }
+
+    .skip {
+      position: fixed;
+      top: var(--space-size-sm);
+      left: var(--space-size-sm);
+      z-index: calc(var(--z-nav) + 1);
+      transform: translateY(-180%);
+      padding: var(--space-size-sm) var(--space-size-md);
+      background: var(--color-accent-bright);
+      color: var(--color-inverse);
+    }
+    .skip:focus { transform: translateY(0); }
+    .shell { width: min(calc(100% - 48px), var(--max)); margin-inline: auto; }
+
+    .nav {
+      position: absolute;
+      inset: 0 0 auto;
+      z-index: var(--z-nav);
+      border-bottom: 1px solid rgba(246,246,246,.22);
+    }
+    .nav-inner {
+      min-height: var(--space-size-3xl);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-size-md);
+    }
+    .wordmark {
+      font: 400 30px/1 var(--font-serif);
+      text-decoration: none;
+    }
+    .nav-links { display: flex; align-items: center; gap: var(--space-size-1xl); }
+    .nav-link {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      color: var(--color-ink-2);
+      font-size: 11px;
+      text-decoration: none;
+      transition: color 180ms ease;
+    }
+    .nav-link:hover { color: var(--color-ink); }
+    .nav-link.access { color: var(--color-accent-bright); }
+
+    .hero {
+      min-height: 100svh;
+      display: grid;
+      grid-template-columns: minmax(0, 46%) minmax(0, 54%);
+      border-bottom: 1px solid var(--color-line);
+      background: var(--color-inverse);
+    }
+    .hero-copy {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: calc(var(--space-size-3xl) + var(--space-size-3xl)) clamp(24px, 4vw, 72px) clamp(48px, 7vw, 96px);
+    }
+    .field-status {
+      display: flex;
+      align-items: center;
+      gap: var(--space-size-sm);
+      margin-bottom: var(--space-size-lg);
+      color: var(--color-ink-2);
+      font-size: 11px;
+    }
+    .field-status::before {
+      content: "";
+      width: var(--space-size-1xs);
+      height: var(--space-size-1xs);
+      border-radius: 50%;
+      background: var(--color-accent-bright);
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1, h2, h3 { text-wrap: balance; }
+    p { text-wrap: pretty; }
+    h1 {
+      max-width: 8ch;
+      margin-bottom: var(--space-size-lg);
+      font-size: clamp(3.25rem, 7.4vw, 6rem);
+      font-weight: 500;
+      letter-spacing: -.04em;
+      line-height: .92;
+      text-transform: uppercase;
+    }
+    .hero-copy > p {
+      max-width: 50ch;
+      margin-bottom: var(--space-size-1xl);
+      color: var(--color-ink-2);
+      font-size: clamp(14px, 1.2vw, 16px);
+    }
+    .button {
+      min-height: 50px;
+      width: fit-content;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-size-sm);
+      padding: 0 var(--space-size-lg);
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
+    }
+    .button-primary { background: var(--color-accent); color: var(--color-inverse); }
+    .button-primary:hover { background: var(--color-accent-bright); }
+    .button-dark { background: var(--color-inverse); color: var(--color-ink); border-color: var(--color-inverse); }
+    .button-dark:hover { background: var(--space-neutral-dark-200); }
+    .button .arrow { font-size: 16px; transition: transform 220ms var(--ease-out); }
+    .button:hover .arrow { transform: translateX(4px); }
+
+    .hero-image {
+      position: relative;
+      min-height: 720px;
+      overflow: hidden;
+      background: var(--color-surface);
+    }
+    .hero-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 54% center;
+      filter: saturate(.58) contrast(1.08);
+    }
+    .photo-stamp {
+      position: absolute;
+      right: var(--space-size-lg);
+      bottom: var(--space-size-lg);
+      max-width: 24ch;
+      padding: var(--space-size-sm) var(--space-size-md);
+      border: 1px solid rgba(246,246,246,.45);
+      background: rgba(15,15,15,.84);
+      color: var(--color-ink-2);
+      font-size: 10px;
+      line-height: 1.5;
+    }
+    .photo-stamp strong { color: var(--color-ink); font-weight: 500; }
+
+    .note-rail {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-bottom: 1px solid var(--color-line);
+    }
+    .note {
+      min-height: var(--space-size-4xl);
+      display: flex;
+      align-items: center;
+      gap: var(--space-size-md);
+      padding: var(--space-size-lg);
+      border-right: 1px solid var(--color-line);
+      color: var(--color-ink-2);
+      font-size: 12px;
+    }
+    .note:last-child { border-right: 0; }
+    .note strong { color: var(--color-ink); font-weight: 500; }
+    .note-mark { color: var(--color-accent-bright); font: 400 32px/1 var(--font-serif); }
+
+    .instrument {
+      padding: clamp(84px, 11vw, 138px) 0;
+      border-bottom: 1px solid var(--color-line);
+    }
+    .instrument-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr);
+      gap: clamp(36px, 8vw, 120px);
+      align-items: end;
+      margin-bottom: var(--space-size-2xl);
+    }
+    .instrument h2 {
+      max-width: 14ch;
+      margin-bottom: 0;
+      font-size: clamp(2.6rem, 5.7vw, 4.75rem);
+      font-weight: 500;
+      letter-spacing: -.04em;
+      line-height: .98;
+      text-transform: uppercase;
+    }
+    .instrument-head p {
+      max-width: 49ch;
+      margin-bottom: 0;
+      color: var(--color-ink-2);
+      font-size: 14px;
+    }
+
+    .record {
+      border: 1px solid var(--color-line);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: var(--color-inverse);
+    }
+    .record-top {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: var(--space-size-lg);
+      align-items: center;
+      padding: var(--space-size-lg);
+      border-bottom: 1px solid var(--color-line);
+    }
+    .record-title {
+      display: flex;
+      align-items: baseline;
+      gap: var(--space-size-md);
+      min-width: 0;
+    }
+    .record-title strong {
+      font: 400 clamp(30px, 5vw, 54px)/1 var(--font-serif);
+      white-space: nowrap;
+    }
+    .record-title span { color: var(--color-ink-2); font-size: 11px; }
+    .week-picker { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-size-1xs); }
+    .week-button {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0;
+      border: 1px solid var(--color-line);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--color-ink-2);
+      font-size: 11px;
+      cursor: pointer;
+      transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+    }
+    .week-button:hover { border-color: var(--color-line-strong); color: var(--color-ink); }
+    .week-button[aria-pressed="true"] {
+      border-color: var(--color-accent);
+      background: var(--color-accent-deep);
+      color: var(--color-accent-bright);
+    }
+    .record-grid {
+      display: grid;
+      grid-template-columns: 1.25fr .75fr;
+    }
+    .session-log { border-right: 1px solid var(--color-line); }
+    .record-row {
+      display: grid;
+      grid-template-columns: minmax(160px, 1.3fr) repeat(3, minmax(68px, .45fr));
+      min-height: 72px;
+      align-items: center;
+      border-bottom: 1px solid var(--color-line);
+    }
+    .record-row:last-child { border-bottom: 0; }
+    .record-cell {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding: var(--space-size-md);
+      border-right: 1px solid var(--color-line);
+      font-size: 12px;
+    }
+    .record-cell:last-child { border-right: 0; }
+    .record-cell small { display: block; color: var(--color-ink-3); font-size: 9px; }
+    .record-cell.exercise { flex-direction: column; align-items: flex-start; justify-content: center; gap: var(--space-size-2xs); }
+    .record-cell.data { justify-content: flex-end; color: var(--color-ink-2); }
+    .record-cell.data strong { color: var(--color-ink); font-weight: 400; }
+    .readout { display: flex; flex-direction: column; }
+    .readout-block {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 180px;
+      padding: var(--space-size-lg);
+      border-bottom: 1px solid var(--color-line);
+    }
+    .readout-block:last-child { border-bottom: 0; }
+    .readout-label { color: var(--color-ink-3); font-size: 10px; }
+    .readout-value { margin-block: var(--space-size-md); font: 400 clamp(46px, 7vw, 84px)/.85 var(--font-serif); }
+    .readout-meta { color: var(--color-ink-2); font-size: 10px; }
+    .suggestion { background: var(--color-accent-deep); }
+    .suggestion .readout-label, .suggestion .readout-meta { color: var(--color-accent-bright); }
+    .suggestion .readout-value { color: var(--color-accent-bright); }
+
+    .truth {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      min-height: 78svh;
+      border-bottom: 1px solid var(--color-line);
+    }
+    .truth-claim {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: clamp(54px, 8vw, 110px);
+      background: var(--color-accent-bright);
+      color: var(--color-inverse);
+    }
+    .truth-claim h2 {
+      max-width: 9ch;
+      margin-bottom: var(--space-size-2xl);
+      font-size: clamp(3rem, 7vw, 6rem);
+      font-weight: 500;
+      letter-spacing: -.04em;
+      line-height: .91;
+      text-transform: uppercase;
+    }
+    .truth-claim p { max-width: 44ch; margin: 0; font-size: 13px; }
+    .truth-detail {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(54px, 8vw, 110px);
+    }
+    .principle {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: var(--space-size-lg);
+      padding: var(--space-size-1xl) 0;
+      border-bottom: 1px solid var(--color-line);
+    }
+    .principle:first-child { border-top: 1px solid var(--color-line); }
+    .principle-term { color: var(--color-ink-3); font-size: 10px; }
+    .principle h3 { margin-bottom: var(--space-size-1xs); font: 400 28px/1 var(--font-serif); }
+    .principle p { max-width: 48ch; margin-bottom: 0; color: var(--color-ink-2); font-size: 12px; }
+
+    .field-test {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(90px, 13vw, 180px) 0;
+    }
+    .field-test::after {
+      content: "+";
+      position: absolute;
+      right: -4vw;
+      bottom: -17vw;
+      color: var(--color-surface);
+      font: 400 min(65vw, 820px)/.7 var(--font-serif);
+      pointer-events: none;
+    }
+    .field-test-inner { position: relative; z-index: 1; }
+    .field-note {
+      display: block;
+      margin-bottom: var(--space-size-lg);
+      color: var(--color-accent-bright);
+      font: 400 28px/1 var(--font-serif);
+    }
+    .field-test h2 {
+      max-width: 12ch;
+      margin-bottom: var(--space-size-lg);
+      font-size: clamp(3rem, 7vw, 6rem);
+      font-weight: 500;
+      letter-spacing: -.04em;
+      line-height: .94;
+      text-transform: uppercase;
+    }
+    .field-test p { max-width: 62ch; margin-bottom: var(--space-size-1xl); color: var(--color-ink-2); font-size: 14px; }
+
+    footer { border-top: 1px solid var(--color-line); }
+    .footer-inner {
+      min-height: var(--space-size-3xl);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-size-lg);
+      padding-bottom: env(safe-area-inset-bottom);
+      color: var(--color-ink-3);
+      font-size: 10px;
+    }
+    .footer-inner a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      color: var(--color-ink-2);
+      text-decoration: none;
+    }
+    .footer-inner a:hover { color: var(--color-ink); }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-copy { min-height: 680px; }
+      .hero-image { min-height: 72svh; }
+      .instrument-head { grid-template-columns: 1fr; }
+      .record-grid { grid-template-columns: 1fr; }
+      .session-log { border-right: 0; border-bottom: 1px solid var(--color-line); }
+      .readout { display: grid; grid-template-columns: repeat(2, 1fr); }
+      .readout-block { min-height: 210px; border-bottom: 0; }
+      .readout-block:first-child { border-right: 1px solid var(--color-line); }
+      .truth { grid-template-columns: 1fr; }
+      .truth-claim, .truth-detail { min-height: 68svh; }
+    }
+
+    @media (max-width: 600px) {
+      .shell { width: min(calc(100% - 32px), var(--max)); }
+      .nav-inner { min-height: 72px; }
+      .nav-link:not(.access) { display: none; }
+      .hero-copy { min-height: 660px; padding: 132px 16px 54px; }
+      h1 { font-size: clamp(3.25rem, 17vw, 4.7rem); overflow-wrap: anywhere; }
+      .hero-image { min-height: 540px; }
+      .hero-image img { object-position: 56% center; }
+      .photo-stamp { right: 16px; bottom: 16px; left: 16px; max-width: none; }
+      .note-rail { grid-template-columns: 1fr; }
+      .note { min-height: 96px; border-right: 0; border-bottom: 1px solid var(--color-line); }
+      .note:last-child { border-bottom: 0; }
+      .instrument { padding: var(--space-size-3xl) 0; }
+      .instrument h2 { font-size: clamp(2.5rem, 12vw, 3.6rem); }
+      .record-top { grid-template-columns: 1fr; }
+      .week-picker { justify-content: flex-start; }
+      .week-button { flex: 1 1 44px; }
+      .record-row { grid-template-columns: minmax(130px, 1.2fr) repeat(3, minmax(48px, .45fr)); }
+      .record-cell { padding: var(--space-size-sm) var(--space-size-1xs); font-size: 10px; }
+      .record-cell small { font-size: 8px; }
+      .readout { grid-template-columns: 1fr; }
+      .readout-block { min-height: 190px; }
+      .readout-block:first-child { border-right: 0; border-bottom: 1px solid var(--color-line); }
+      .truth-claim, .truth-detail { min-height: auto; padding: var(--space-size-2xl) 16px; }
+      .truth-claim h2, .field-test h2 { font-size: clamp(3rem, 15vw, 4.6rem); overflow-wrap: anywhere; }
+      .principle { grid-template-columns: 1fr; gap: var(--space-size-sm); }
+      .field-test { padding: var(--space-size-3xl) 0 120px; }
+      .footer-inner { align-items: flex-start; flex-direction: column; justify-content: center; padding-block: var(--space-size-lg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="nav" aria-label="Primary navigation">
+    <div class="shell nav-inner">
+      <a class="wordmark" href="#" aria-label="Meso+ home">Meso+</a>
+      <nav class="nav-links">
+        <a class="nav-link" href="#instrument">The instrument</a>
+        <a class="nav-link" href="#principles">Principles</a>
+        <a class="nav-link access" href="#field-test">Request access ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="field-status">PRIVATE FIELD TEST · AMSTERDAM</div>
+        <h1>Make the next set count.</h1>
+        <p>Meso+ is a periodization-aware training log. It remembers the work, reads the context, and gives you a grounded next move.</p>
+        <a class="button button-primary" href="#field-test">REQUEST EARLY ACCESS <span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+      <figure class="hero-image">
+        <img src="assets/training-grip.jpg" width="1536" height="1024" alt="Chalked hands taking a mixed grip on a loaded barbell in a worn strength gym">
+        <figcaption class="photo-stamp"><strong>THE MOMENT BEFORE THE REP.</strong><br>Enough data to decide. No feed to distract.</figcaption>
+      </figure>
+    </section>
+
+    <div class="note-rail" aria-label="Meso+ in three statements">
+      <div class="note"><span class="note-mark">+</span><span><strong>LOG THE WORK</strong><br>kg · reps · sets · RIR</span></div>
+      <div class="note"><span class="note-mark">→</span><span><strong>READ THE SIGNAL</strong><br>sleep · soreness · performance</span></div>
+      <div class="note"><span class="note-mark">↗</span><span><strong>DECIDE WHAT MOVES</strong><br>the suggestion is yours to accept</span></div>
+    </div>
+
+    <section class="instrument" id="instrument">
+      <div class="shell">
+        <div class="instrument-head">
+          <h2>Your log should remember what you can’t.</h2>
+          <p>A session does not happen in isolation. Meso+ puts the last work, today’s readiness, and your place in the mesocycle on the same surface. Choose a week to see how the next move changes.</p>
+        </div>
+
+        <div class="record" aria-label="Interactive Meso+ training record">
+          <div class="record-top">
+            <div class="record-title">
+              <strong id="phaseName">Overload</strong>
+              <span id="cycleMeta">MICROCYCLE 03 / DAY B</span>
+            </div>
+            <div class="week-picker" aria-label="Select microcycle week">
+              <button class="week-button" type="button" data-week="0" aria-pressed="false">W1</button>
+              <button class="week-button" type="button" data-week="1" aria-pressed="false">W2</button>
+              <button class="week-button" type="button" data-week="2" aria-pressed="true">W3</button>
+              <button class="week-button" type="button" data-week="3" aria-pressed="false">W4</button>
+              <button class="week-button" type="button" data-week="4" aria-pressed="false">W5</button>
+              <button class="week-button" type="button" data-week="5" aria-pressed="false">W6</button>
+            </div>
+          </div>
+
+          <div class="record-grid">
+            <div class="session-log">
+              <div class="record-row">
+                <div class="record-cell exercise"><small>EXERCISE</small>Barbell squat</div>
+                <div class="record-cell data"><span><small>KG</small><strong id="squatKg">92.5</strong></span></div>
+                <div class="record-cell data"><span><small>REPS</small><strong id="squatReps">7</strong></span></div>
+                <div class="record-cell data"><span><small>RIR</small><strong>2</strong></span></div>
+              </div>
+              <div class="record-row">
+                <div class="record-cell exercise"><small>EXERCISE</small>Incline press</div>
+                <div class="record-cell data"><span><small>KG</small><strong>32</strong></span></div>
+                <div class="record-cell data"><span><small>REPS</small><strong>9</strong></span></div>
+                <div class="record-cell data"><span><small>RIR</small><strong>2</strong></span></div>
+              </div>
+              <div class="record-row">
+                <div class="record-cell exercise"><small>EXERCISE</small>Weighted pull-up</div>
+                <div class="record-cell data"><span><small>KG</small><strong>+20</strong></span></div>
+                <div class="record-cell data"><span><small>REPS</small><strong>6</strong></span></div>
+                <div class="record-cell data"><span><small>RIR</small><strong>1</strong></span></div>
+              </div>
+              <div class="record-row">
+                <div class="record-cell exercise"><small>CONTEXT</small>BJJ · hard rounds</div>
+                <div class="record-cell data"><span><small>SLEEP</small><strong>7.5h</strong></span></div>
+                <div class="record-cell data"><span><small>ENERGY</small><strong>Good</strong></span></div>
+                <div class="record-cell data"><span><small>PAIN</small><strong>None</strong></span></div>
+              </div>
+            </div>
+
+            <aside class="readout">
+              <div class="readout-block">
+                <span class="readout-label">READINESS / 10</span>
+                <strong class="readout-value" id="readinessValue">8.2</strong>
+                <span class="readout-meta" id="readinessNote">ON TRACK FOR PLANNED LOAD</span>
+              </div>
+              <div class="readout-block suggestion" aria-live="polite">
+                <span class="readout-label">NEXT SET / SUGGESTED</span>
+                <strong class="readout-value" id="suggestionValue">+1 rep</strong>
+                <span class="readout-meta" id="suggestionNote">LAST SESSION AT RIR 2. YOU DECIDE.</span>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="truth" id="principles">
+      <div class="truth-claim">
+        <h2>Not motivation. Direction.</h2>
+        <p>Meso+ does not need you to close rings, protect a streak, or perform your training for an audience. It needs an honest set and enough context to read it.</p>
+      </div>
+      <div class="truth-detail">
+        <article class="principle">
+          <span class="principle-term">LOAD</span>
+          <div><h3>Progressive, not automatic.</h3><p>A suggestion can move weight or reps. Pain and falling RIR can stop it. You make the call.</p></div>
+        </article>
+        <article class="principle">
+          <span class="principle-term">TIME</span>
+          <div><h3>Blocks, not streaks.</h3><p>Calibration, accumulation, overload, peak, deload. The session knows where it lives.</p></div>
+        </article>
+        <article class="principle">
+          <span class="principle-term">SCOPE</span>
+          <div><h3>Gym and mat, one athlete.</h3><p>Resistance work and BJJ change the same recovery budget. Meso+ keeps both in view.</p></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="field-test" id="field-test">
+      <div class="shell field-test-inner">
+        <span class="field-note">Built under load.</span>
+        <h2>The field test is open.</h2>
+        <p>Meso+ is being trained in the gym before it goes public. Early athletes get the working product, direct access to the builder, and a real say in what earns its place.</p>
+        <a class="button button-primary" href="mailto:hello@mesoplus.app?subject=Meso%2B%20field%20test">REQUEST EARLY ACCESS <span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell footer-inner">
+      <span>© <span id="year">2026</span> MESO+ · BUILT BY FABA ORIGIN</span>
+      <a href="mailto:hello@mesoplus.app">HELLO@MESOPLUS.APP</a>
+    </div>
+  </footer>
+
+  <script>
+    const weeks = [
+      { phase: "Calibration", meta: "MICROCYCLE 01 / DAY B", readiness: "7.6", readinessNote: "ESTABLISH THE BASELINE", suggestion: "hold", suggestionNote: "READ THE SET BEFORE ADDING LOAD.", kg: "85", reps: "8" },
+      { phase: "Build", meta: "MICROCYCLE 02 / DAY B", readiness: "8.0", readinessNote: "RECOVERED / BUILDING VOLUME", suggestion: "+2.5 kg", suggestionNote: "REPS CLEARED WITH RIR 3. YOU DECIDE.", kg: "90", reps: "7" },
+      { phase: "Overload", meta: "MICROCYCLE 03 / DAY B", readiness: "8.2", readinessNote: "ON TRACK FOR PLANNED LOAD", suggestion: "+1 rep", suggestionNote: "LAST SESSION AT RIR 2. YOU DECIDE.", kg: "92.5", reps: "7" },
+      { phase: "Push", meta: "MICROCYCLE 04 / DAY B", readiness: "7.4", readinessNote: "FATIGUE RISING / LOAD VIABLE", suggestion: "hold kg", suggestionNote: "ADD A REP ONLY IF RIR HOLDS.", kg: "95", reps: "6" },
+      { phase: "Peak", meta: "MICROCYCLE 05 / DAY B", readiness: "6.8", readinessNote: "SORENESS ABOVE BASELINE", suggestion: "−1 set", suggestionNote: "KEEP INTENSITY. CUT VOLUME.", kg: "97.5", reps: "5" },
+      { phase: "Deload", meta: "MICROCYCLE 06 / DAY B", readiness: "7.1", readinessNote: "RECOVERY IS THE WORK", suggestion: "−35%", suggestionNote: "MOVE WELL. LEAVE FRESH.", kg: "62.5", reps: "6" }
+    ];
+
+    const ids = {
+      phase: document.getElementById("phaseName"),
+      meta: document.getElementById("cycleMeta"),
+      readiness: document.getElementById("readinessValue"),
+      readinessNote: document.getElementById("readinessNote"),
+      suggestion: document.getElementById("suggestionValue"),
+      suggestionNote: document.getElementById("suggestionNote"),
+      kg: document.getElementById("squatKg"),
+      reps: document.getElementById("squatReps")
+    };
+
+    document.querySelectorAll(".week-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        const next = weeks[Number(button.dataset.week)];
+        document.querySelectorAll(".week-button").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+        ids.phase.textContent = next.phase;
+        ids.meta.textContent = next.meta;
+        ids.readiness.textContent = next.readiness;
+        ids.readinessNote.textContent = next.readinessNote;
+        ids.suggestion.textContent = next.suggestion;
+        ids.suggestionNote.textContent = next.suggestionNote;
+        ids.kg.textContent = next.kg;
+        ids.reps.textContent = next.reps;
+      });
+    });
+
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
