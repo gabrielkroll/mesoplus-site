@@ -109,9 +109,24 @@
       justify-content: space-between;
       gap: var(--space-size-md);
     }
+    /* The lockup as the app draws it: serif italic word, mono plus raised into
+       superscript and carrying the accent. Italic is stated rather than left to
+       the loader — only Instrument Serif's italic is fetched (ital@1), so an
+       unstyled wordmark would rely on the browser picking it up by accident. */
     .wordmark {
-      font: 400 30px/1 var(--font-serif);
+      font: italic 400 30px/1 var(--font-serif);
+      color: var(--color-ink);
       text-decoration: none;
+    }
+    .wordmark sup {
+      font-family: var(--font-mono);
+      font-style: normal;
+      font-size: 0.59em;        /* 13/22 — the ratio the app renders at */
+      color: var(--color-accent);
+      vertical-align: super;
+      letter-spacing: -0.02em;
+      /* keeps the raised glyph from growing the nav's line box */
+      line-height: 0;
     }
     .nav-links { display: flex; align-items: center; gap: var(--space-size-1xl); }
     .nav-link {
@@ -506,7 +521,7 @@
 
   <header class="nav" aria-label="Primary navigation">
     <div class="shell nav-inner">
-      <a class="wordmark" href="#" aria-label="Meso+ home">Meso+</a>
+      <a class="wordmark" href="#" aria-label="Meso+ home">Meso<sup>+</sup></a>
       <nav class="nav-links">
         <a class="nav-link" href="#instrument">The instrument</a>
         <a class="nav-link" href="#principles">Principles</a>
